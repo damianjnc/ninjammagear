@@ -21,15 +21,17 @@ function MyApp({ apollo, Component, pageProps }) {
 // perform automatic static optimization, causing every page in your app to
 // be server-side rendered.
 
-MyApp.getInitialProps = async ({ Component, ctx }) => {
+MyApp.getInitialProps = async appContext => {
+  const appProps = await App.getInitialProps(appContext)
+
   let pageProps = {}
-  if (Component.getInitialProps) {
-    pageProps = await Component.getInitialProps(ctx)
+  if (appContext.Component.getInitialProps) {
+    pageProps = await appContext.Component.getInitialProps(appContext.ctx)
   }
   //this exposes the query to the user
-  pageProps.query = ctx.query
+  pageProps.query = appContext.ctx.query
 
-  return { pageProps }
+  return { ...appProps, pageProps }
 }
 
 export default withData(MyApp)
