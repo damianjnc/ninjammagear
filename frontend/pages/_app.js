@@ -1,13 +1,17 @@
 import App, { Container } from 'next/app'
+import { ApolloProvider } from 'react-apollo'
+import withData from '../lib/withData'
 
 import Page from '../components/Page'
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ apollo, Component, pageProps }) {
   return (
     <Container>
-      <Page>
-        <Component {...pageProps} />
-      </Page>
+      <ApolloProvider client={apollo}>
+        <Page>
+          <Component {...pageProps} />
+        </Page>
+      </ApolloProvider>
     </Container>
   )
 }
@@ -17,11 +21,15 @@ function MyApp({ Component, pageProps }) {
 // perform automatic static optimization, causing every page in your app to
 // be server-side rendered.
 
-MyApp.getInitialProps = async appContext => {
-  // calls page's `getInitialProps` and fills `appProps.pageProps`
-  const appProps = await App.getInitialProps(appContext)
+MyApp.getInitialProps = async ({ Component, ctx }) => {
+  let pageProps = {}
+  if (Component.getInitialProps) {
+    pageProps = await Component.getInitialProps(ctx)
+  }
+  //this exposes the query to the user
+  pageProps.query = ctx.query
 
-  return { ...appProps }
+  return { pageProps }
 }
 
-export default MyApp
+export default withData(MyApp)
