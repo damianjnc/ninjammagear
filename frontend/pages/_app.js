@@ -1,37 +1,31 @@
 import App, { Container } from 'next/app'
+import Page from '../components/Page'
 import { ApolloProvider } from 'react-apollo'
 import withData from '../lib/withData'
 
-import Page from '../components/Page'
-
-function MyApp({ apollo, Component, pageProps }) {
-  return (
-    <Container>
-      <ApolloProvider client={apollo}>
-        <Page>
-          <Component {...pageProps} />
-        </Page>
-      </ApolloProvider>
-    </Container>
-  )
-}
-
-// Only uncomment this method if you have blocking data requirements for
-// every single page in your application. This disables the ability to
-// perform automatic static optimization, causing every page in your app to
-// be server-side rendered.
-
-MyApp.getInitialProps = async appContext => {
-  const appProps = await App.getInitialProps(appContext)
-
-  let pageProps = {}
-  if (appContext.Component.getInitialProps) {
-    pageProps = await appContext.Component.getInitialProps(appContext.ctx)
+class MyApp extends App {
+  static async getInitialProps({ Component, ctx }) {
+    let pageProps = {}
+    if (Component.getInitialProps) {
+      pageProps = await Component.getInitialProps(ctx)
+    }
+    // this exposes the query to the user
+    pageProps.query = ctx.query
+    return { pageProps }
   }
-  //this exposes the query to the user
-  pageProps.query = appContext.ctx.query
+  render() {
+    const { Component, apollo, pageProps } = this.props
 
-  return { ...appProps, pageProps }
+    return (
+      <Container>
+        <ApolloProvider client={apollo}>
+          <Page>
+            <Component {...pageProps} />
+          </Page>
+        </ApolloProvider>
+      </Container>
+    )
+  }
 }
 
 export default withData(MyApp)
